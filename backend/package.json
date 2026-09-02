@@ -1,0 +1,34 @@
+{
+  "name": "networking-tracker-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Node + Express API for the Secure Networking Tracker. Verifies Neon Auth JWTs, validates input, and forwards queries to the Neon Data API where RLS enforces ownership.",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "test": "vitest run tests/validation.test.ts",
+    "test:privacy": "vitest run tests/privacy.test.ts --testTimeout=60000",
+    "test:all": "vitest run --testTimeout=60000",
+    "migrate": "tsx ../db/migrate.ts",
+    "typecheck": "tsc --noEmit",
+    "test:live": "vitest run tests/privacy.test.ts tests/server-validation.test.ts --testTimeout=60000"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jose": "^6.1.0",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.7.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

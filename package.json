@@ -1,0 +1,21 @@
+{
+  "name": "agentic-ai-assignment-1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Secure Networking Tracker \u2014 React frontend, Node backend, Neon Postgres with Row Level Security.",
+  "scripts": {
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "migrate": "npm --prefix backend run migrate",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "test": "npm --prefix backend test",
+    "test:privacy": "npm --prefix backend run test:privacy",
+    "test:e2e": "playwright test",
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend exec tsc -b --noEmit",
+    "test:live": "npm --prefix backend run test:live"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "dotenv": "^17.2.3"
+  }
+}

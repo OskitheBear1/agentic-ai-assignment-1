@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# environment — NEVER commit real secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# build output
+dist/
+build/
+.vercel/
+*.tsbuildinfo
+
+# test artifacts
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+coverage/
+
+# editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.log
+npm-debug.log*
+
+# agent handoff (local only)
+.agent-handoff.md

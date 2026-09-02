@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-ink: oklch(0.21 0.02 265);
+  --color-muted: oklch(0.55 0.02 265);
+  --color-line: oklch(0.92 0.01 265);
+  --color-surface: oklch(1 0 0);
+  --color-canvas: oklch(0.98 0.005 265);
+  --color-brand: oklch(0.48 0.16 265);
+  --color-brand-soft: oklch(0.96 0.03 265);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  @apply bg-canvas text-ink antialiased;
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Visible focus for keyboard users on every interactive element. */
+:focus-visible {
+  @apply outline-2 outline-offset-2 outline-brand;
+}
