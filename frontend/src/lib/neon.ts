@@ -11,15 +11,35 @@ import { BetterAuthReactAdapter } from '@neondatabase/neon-js/auth/react/adapter
  * own rows. The Postgres connection string is a different matter entirely and
  * never appears in this codebase's frontend.
  */
-const AUTH_URL = import.meta.env.VITE_NEON_AUTH_URL.replace(/\/+$/, '');
+/**
+ * Reads a required public config value.
+ *
+ * Vite inlines these at build time, so a variable missing from the build
+ * environment becomes `undefined` in the bundle and the app dies on the first
+ * property access — a blank page with a cryptic "cannot read properties of
+ * undefined". Failing here names the variable instead.
+ */
+function requiredEnv(name: keyof ImportMetaEnv): string {
+  const value = import.meta.env[name];
+  if (typeof value !== 'string' || value === '') {
+    throw new Error(
+      `Missing ${String(name)}. Set it in .env.local for local development, ` +
+        `or in the Vercel project's environment variables for a deployment, ` +
+        `then rebuild — Vite inlines these at build time.`,
+    );
+  }
+  return value.replace(/\/+$/, '');
+}
+
+const AUTH_URL = requiredEnv('VITE_NEON_AUTH_URL');
 
 export const neon = createClient({
   auth: {
-    url: import.meta.env.VITE_NEON_AUTH_URL,
+    url: AUTH_URL,
     adapter: BetterAuthReactAdapter(),
   },
   dataApi: {
-    url: import.meta.env.VITE_NEON_DATA_API_URL,
+    url: requiredEnv('VITE_NEON_DATA_API_URL'),
   },
 });
 

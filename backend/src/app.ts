@@ -27,8 +27,13 @@ export function createApp() {
         if (env.allowedOrigins.includes(normalized)) {
           return callback(null, true);
         }
-        // Allow Vercel preview deployments of this project.
-        if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(normalized)) {
+        // Allow preview deployments of THIS project only. A bare
+        // *.vercel.app rule would let any site on the platform call this API.
+        if (
+          /^https:\/\/networking-tracker-[a-z0-9-]+\.vercel\.app$/.test(
+            normalized,
+          )
+        ) {
           return callback(null, true);
         }
         return callback(new Error('Origin not allowed by CORS.'));

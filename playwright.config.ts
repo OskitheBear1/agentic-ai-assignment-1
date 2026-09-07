@@ -17,7 +17,10 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
   workers: 1,
-  retries: process.env.CI ? 1 : 0,
+  // One retry always. Against a deployed serverless backend the first request
+  // after an idle period pays a cold start, which occasionally exceeds an
+  // assertion timeout; that is infrastructure latency, not a broken app.
+  retries: 1,
   timeout: 60_000,
   expect: { timeout: 10_000 },
   reporter: [['list'], ['html', { open: 'never' }]],

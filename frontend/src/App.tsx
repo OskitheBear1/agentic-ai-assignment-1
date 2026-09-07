@@ -11,6 +11,7 @@ import { LoadingState } from './components/ui/States';
 export default function App() {
   const { data: session, isPending } = auth.useSession();
 
+
   if (isPending) {
     return (
       <div className="flex min-h-dvh items-center justify-center">

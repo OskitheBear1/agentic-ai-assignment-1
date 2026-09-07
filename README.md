@@ -8,8 +8,11 @@ Postgres itself refuses to hand a row to anyone else. That last part is the poin
 of the project: the security boundary is Row Level Security in the database, not
 a filter in application code that could be forgotten or bypassed.
 
-**Live app:** `TODO_FRONTEND_URL`
-**API:** `TODO_BACKEND_URL`
+**Live app:** https://networking-tracker-nine-fawn.vercel.app
+**API:** https://networking-tracker-api-alpha.vercel.app
+
+Every screenshot below was captured from that deployed URL, and the test results
+were produced against it.
 
 ---
 
@@ -466,7 +469,7 @@ check, and the mobile layout — writing the screenshots in this README as it go
 Point it at production instead of localhost:
 
 ```bash
-E2E_BASE_URL=TODO_FRONTEND_URL npm run test:e2e
+E2E_BASE_URL=https://networking-tracker-nine-fawn.vercel.app TEST_ORIGIN=https://networking-tracker-nine-fawn.vercel.app npm run test:e2e
 ```
 
 ---
@@ -475,7 +478,7 @@ E2E_BASE_URL=TODO_FRONTEND_URL npm run test:e2e
 
 | Requirement | Evidence |
 | --- | --- |
-| App is live at a public URL | `TODO_FRONTEND_URL` |
+| App is live at a public URL | https://networking-tracker-nine-fawn.vercel.app |
 | Sign in and sign out | [`docs/01-sign-in-page.png`](docs/01-sign-in-page.png), [`docs/02-signed-in.png`](docs/02-signed-in.png), [`docs/03-signed-out.png`](docs/03-signed-out.png) |
 | Add, view, edit, delete, survives refresh | [`docs/04`](docs/04-empty-state.png)–[`docs/08`](docs/08-contact-deleted.png) |
 | Sort and filter | [`docs/09-sorted-by-name.png`](docs/09-sorted-by-name.png), [`docs/10-filtered-high-priority.png`](docs/10-filtered-high-priority.png), [`docs/11-search-results.png`](docs/11-search-results.png) |
@@ -500,7 +503,13 @@ Two Vercel projects from this one repository.
    Do **not** add `DATABASE_URL` — the API never uses it.
 3. Deploy. `backend/vercel.json` rewrites every path to `api/index.ts`, which
    exports the Express app as a serverless function.
-4. Check `https://<backend>.vercel.app/health` returns `{"status":"ok"}`.
+4. Check `https://networking-tracker-api-alpha.vercel.app/health` returns `{"status":"ok"}`.
+
+   **Note:** `VITE_`-prefixed variables cannot be stored as *sensitive* on
+   Vercel — they are public by definition, and the CLI needs `--no-sensitive`.
+   A silently missing one becomes `undefined` in the bundle at build time, so
+   `frontend/src/lib/neon.ts` checks for it and names the variable instead of
+   failing on a blank page.
 
 ### Frontend
 
@@ -520,14 +529,20 @@ Two Vercel projects from this one repository.
 
 ### Definition-of-done checklist
 
-- [ ] Live at a public URL
-- [ ] Sign in and sign out work
-- [ ] Add, view, edit, delete, sort, filter all work
-- [ ] Data survives a refresh
-- [ ] User A cannot see or change User B's contacts
-- [ ] Invalid data fails with a clear message
-- [ ] `npm test` passes
-- [ ] No secret appears in frontend code or Git history
+All verified against the deployed application, not just locally:
+
+- [x] Live at a public URL — https://networking-tracker-nine-fawn.vercel.app
+- [x] Sign in and sign out work — `auth.spec.ts` against production
+- [x] Add, view, edit, delete, sort, filter all work — `contacts.spec.ts`
+- [x] Data survives a refresh — asserted after `page.reload()`
+- [x] User A cannot see or change User B's contacts — 13 tests against the
+      production API *and* directly against the public Data API
+- [x] Invalid data fails with a clear message — 10 tests posting invalid bodies
+      straight to the production API
+- [x] `npm test` passes — 34 validation unit tests
+- [x] No secret appears in frontend code or Git history — `DATABASE_URL` is set
+      on neither Vercel project; the built bundle contains only the three public
+      URLs
 
 ---
 
@@ -549,6 +564,13 @@ Two Vercel projects from this one repository.
 - **Tests write to the real database.** The integration tests create and clean up
   their own rows against real Neon. A dedicated Neon branch per test run would
   isolate them properly.
+- **The API is a serverless function, so the first request after an idle period
+  pays a cold start.** The end-to-end suite runs with one retry for that reason.
+  Keeping a warm instance would cost money for no benefit here.
+- **The deployed URLs carry Vercel's auto-generated suffixes** because
+  `networking-tracker` and `networking-tracker-api` were already taken. A custom
+  domain would fix it; renaming the project does not, since the production
+  domain is assigned once.
 - **No rate limiting on the API.** The database is protected by RLS, but a
   signed-in user could hammer the endpoints. Vercel's firewall or a simple
   in-memory limiter would address it.
