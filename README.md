@@ -147,6 +147,32 @@ result set.
 `DATABASE_URL` is used in exactly one place: `db/migrate.ts`, run manually to
 create the schema. It is never imported by any request handler.
 
+### Why the API URL is public — and why that is safe
+
+The API and Data API URLs appear in this README and in the browser bundle on
+purpose. They are addresses, not credentials. Every one of these was verified
+against the deployed application:
+
+| Attack | Result |
+| --- | --- |
+| Any API call with no token | `401` |
+| JWT with `alg: none` | `401` — verification is pinned to the JWKS key |
+| JWT signed with a guessed HS256 secret | `401` |
+| Valid JWT with the `sub` claim swapped | `401` — the signature no longer matches |
+| Expired JWT | `401` |
+| Signature stripped | `401` |
+| Anonymous read of the public Data API | no rows — the `anonymous` role has no grants |
+| Signed-in user reading `users` / `session` via the Data API | `404` — not exposed |
+| PostgREST filter injection through `search` | escaped; no foreign rows returned |
+| `sort=user_id`, `sort=id;drop` and similar | `400` — the column is an allow-list |
+| Oversized body | `413` with a clear message |
+| Malformed JSON, bad ids, unknown routes | `400` / `404`, no stack traces or internals |
+
+Secrecy is not part of the security model. What protects the data is signature
+verification against Neon's public JWKS, and Row Level Security in Postgres.
+The connection string — the one value that *is* a credential — is set on
+neither Vercel project and appears nowhere in the repository or the bundle.
+
 ### Three independent layers reject bad data
 
 1. **The browser** (`frontend/src/components/ContactForm.tsx`) — instant feedback.

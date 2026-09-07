@@ -70,6 +70,25 @@ describe('POST /api/contacts rejects invalid input', () => {
     expect((await response.json()).message).toContain('not valid JSON');
   });
 
+  it('rejects an oversized body with 413, not a generic 500', async () => {
+    const result = await callApi(user, '/api/contacts', {
+      method: 'POST',
+      body: JSON.stringify({ name: 'x'.repeat(200_000) }),
+    });
+
+    expect(result.status).toBe(413);
+    expect(result.body.message).toContain('too large');
+  });
+
+  it('sets basic hardening headers', async () => {
+    const response = await fetch(`${API_URL}/health`);
+
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(response.headers.get('referrer-policy')).toBe('no-referrer');
+    // Express advertises itself by default; that is switched off.
+    expect(response.headers.get('x-powered-by')).toBeNull();
+  });
+
   it('accepts a valid contact, then cleans up after itself', async () => {
     const created = await callApi(user, '/api/contacts', {
       method: 'POST',

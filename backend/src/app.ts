@@ -44,7 +44,17 @@ export function createApp() {
     }),
   );
 
+  // A contact is a handful of short text fields; 32kb is generous. Capping the
+  // body size stops a large payload from tying up a function invocation.
   app.use(express.json({ limit: '32kb' }));
+
+  // Cheap hardening. This API only ever returns JSON, so there is no reason for
+  // a browser to sniff the content type or leak a referrer to another origin.
+  app.use((_req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    next();
+  });
 
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok' });
@@ -69,6 +79,20 @@ export function createApp() {
 
     if (err instanceof SyntaxError && 'body' in err) {
       res.status(400).json({ message: 'Request body is not valid JSON.' });
+      return;
+    }
+
+    // body-parser rejects oversized payloads with its own error type. Without
+    // this it would fall through to the generic 500, which tells the caller
+    // nothing about what they did wrong.
+    if (
+      typeof err === 'object' &&
+      err !== null &&
+      (err as { type?: string }).type === 'entity.too.large'
+    ) {
+      res
+        .status(413)
+        .json({ message: 'That request is too large. Shorten the notes field.' });
       return;
     }
 
