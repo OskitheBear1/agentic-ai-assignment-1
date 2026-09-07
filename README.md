@@ -68,6 +68,8 @@ the evidence is reproducible rather than hand-captured.
 - Distinct loading, empty, success, and error states throughout
 - Responsive from a 390px phone to a desktop browser
 - Keyboard accessible: visible focus rings, labelled inputs, `role="alert"` errors
+- Built on shadcn/ui, so dialogs trap focus and close on Escape, and the select
+  menus are fully keyboard navigable
 
 ---
 
@@ -76,7 +78,8 @@ the evidence is reproducible rather than hand-captured.
 | Layer | Choice | Why |
 | --- | --- | --- |
 | Frontend | Vite + React 19 + TypeScript | A standalone single-page app, deployed independently of the API. TypeScript catches shape mismatches between the two at build time. |
-| Styling | Tailwind CSS v4 | Utility-first styling with a small custom design token set (`--color-brand`, `--color-line`, …) defined once in `frontend/src/index.css`. Responsive breakpoints come for free, which is what makes the mobile layout cheap to maintain. |
+| Component system | **shadcn/ui** | Accessible primitives — Button, Input, Label, Textarea, Select, Dialog, Table, Card, Badge, Alert — generated into `frontend/src/components/ui/`. The components live in the repo rather than in `node_modules`, so they can be adapted: `button.tsx` carries a local `loading` prop, which is the intended workflow. Keyboard behaviour, focus management, and ARIA wiring come from the library instead of being hand-rolled. |
+| Styling | Tailwind CSS v4 | The layer shadcn/ui is built on. Design tokens (`--primary`, `--muted-foreground`, …) are defined once in `frontend/src/index.css` and drive both light and dark. Responsive breakpoints come for free, which is what makes the mobile layout cheap to maintain. |
 | Icons | lucide-react | Consistent, accessible icon set. |
 | Backend | Node + Express 5 + TypeScript | A separate service with its own deployment, its own environment variables, and its own responsibilities: verify the token, validate the input, forward the query. |
 | Validation | Zod | One schema defines both the runtime check and the TypeScript type, so they cannot drift apart. |

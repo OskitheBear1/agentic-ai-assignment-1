@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import './env';
 
 export const DOCS = 'docs';
@@ -74,6 +74,24 @@ export function visibleText(page: Page, text: string) {
 }
 
 /**
+ * Picks a value from a shadcn/ui Select.
+ *
+ * These are not native <select> elements — they are button triggers that open a
+ * listbox — so Playwright's selectOption() does not apply. Click the trigger,
+ * then click the option by its accessible name.
+ */
+export async function chooseOption(
+  scope: Page | Locator,
+  triggerLabel: string | RegExp,
+  optionName: string | RegExp,
+): Promise<void> {
+  const page = 'page' in scope ? (scope as Locator).page() : (scope as Page);
+  await scope.getByLabel(triggerLabel).click();
+  // The listbox portals to the document body, so look for the option on the page.
+  await page.getByRole('option', { name: optionName, exact: true }).click();
+}
+
+/**
  * The open create/edit dialog.
  *
  * Form fields are looked up inside it rather than on the whole page, because
@@ -104,8 +122,10 @@ export async function addContact(
   if (contact.whereMet)
     await form.getByLabel('Where you met').fill(contact.whereMet);
   if (contact.notes) await form.getByLabel('Notes').fill(contact.notes);
-  if (contact.priority)
-    await form.getByLabel('Priority').selectOption(contact.priority);
+  if (contact.priority) {
+    const label = contact.priority.charAt(0).toUpperCase() + contact.priority.slice(1);
+    await chooseOption(form, 'Priority', label);
+  }
 
   await form.getByRole('button', { name: 'Add contact' }).click();
   await expect(page.getByText('Contact added.')).toBeVisible();

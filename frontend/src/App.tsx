@@ -1,7 +1,7 @@
-import { auth } from './lib/neon';
-import { Contacts } from './pages/Contacts';
-import { SignIn } from './pages/SignIn';
-import { LoadingState } from './components/ui/States';
+import { auth } from '@/lib/neon';
+import { Contacts } from '@/pages/Contacts';
+import { SignIn } from '@/pages/SignIn';
+import { LoadingState } from '@/components/ui/states';
 
 /**
  * Route by session state rather than by URL: signed out shows the auth screen,

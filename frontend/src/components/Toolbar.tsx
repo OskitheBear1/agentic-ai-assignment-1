@@ -1,7 +1,15 @@
 import { Search } from 'lucide-react';
-import type { ListParams, Priority } from '../lib/api';
-import { cn } from '../lib/utils';
-import { inputClass } from './ui/Field';
+import type { ListParams, Priority } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface ToolbarProps {
   params: ListParams;
@@ -19,16 +27,25 @@ const SORTS: Array<{ value: ListParams['sort']; label: string }> = [
 
 const PRIORITIES: Priority[] = ['high', 'medium', 'low'];
 
+/** base-ui's Select renders the raw value, so triggers need a label lookup. */
+const priorityFilterLabel = (value: string) =>
+  value === 'all'
+    ? 'All priorities'
+    : value.charAt(0).toUpperCase() + value.slice(1);
+
+const sortLabel = (value: string) =>
+  `Sort: ${SORTS.find((option) => option.value === value)?.label ?? value}`;
+
 /** Search, priority filter, and sort controls. All applied server-side. */
 export function Toolbar({ params, onChange, total }: ToolbarProps) {
   return (
-    <div className="flex flex-col gap-3 border-b border-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="border-border flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="relative sm:max-w-xs sm:flex-1">
         <Search
-          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted"
+          className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
           aria-hidden
         />
-        <input
+        <Input
           type="search"
           value={params.search ?? ''}
           onChange={(event) =>
@@ -36,63 +53,68 @@ export function Toolbar({ params, onChange, total }: ToolbarProps) {
           }
           placeholder="Search name, company, role"
           aria-label="Search contacts"
-          className={cn(inputClass(), 'pl-9')}
+          className="pl-9"
         />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <label className="sr-only" htmlFor="filter-priority">
+        <Label htmlFor="filter-priority" className="sr-only">
           Filter by priority
-        </label>
-        <select
-          id="filter-priority"
-          value={params.priority ?? ''}
-          onChange={(event) =>
+        </Label>
+        <Select
+          value={params.priority ?? 'all'}
+          onValueChange={(value) =>
             onChange({
-              priority: (event.target.value || undefined) as
-                | Priority
-                | undefined,
+              priority: value === 'all' ? undefined : (value as Priority),
             })
           }
-          className={cn(inputClass(), 'w-auto')}
         >
-          <option value="">All priorities</option>
-          {PRIORITIES.map((priority) => (
-            <option key={priority} value={priority}>
-              {priority.charAt(0).toUpperCase() + priority.slice(1)}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger id="filter-priority" className="w-auto">
+            <SelectValue>
+              {(value) => priorityFilterLabel(String(value))}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All priorities</SelectItem>
+            {PRIORITIES.map((priority) => (
+              <SelectItem key={priority} value={priority}>
+                {priority.charAt(0).toUpperCase() + priority.slice(1)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <label className="sr-only" htmlFor="sort-by">
+        <Label htmlFor="sort-by" className="sr-only">
           Sort by
-        </label>
-        <select
-          id="sort-by"
+        </Label>
+        <Select
           value={params.sort}
-          onChange={(event) =>
-            onChange({ sort: event.target.value as ListParams['sort'] })
+          onValueChange={(value) =>
+            onChange({ sort: value as ListParams['sort'] })
           }
-          className={cn(inputClass(), 'w-auto')}
         >
-          {SORTS.map((option) => (
-            <option key={option.value} value={option.value}>
-              Sort: {option.label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger id="sort-by" className="w-auto">
+            <SelectValue>{(value) => sortLabel(String(value))}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {SORTS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <button
-          type="button"
+        <Button
+          variant="outline"
           onClick={() =>
             onChange({ direction: params.direction === 'asc' ? 'desc' : 'asc' })
           }
-          className="h-10 rounded-lg border border-line bg-surface px-3 text-sm font-medium text-ink transition-colors hover:bg-canvas"
         >
           {params.direction === 'asc' ? 'Ascending' : 'Descending'}
-        </button>
+        </Button>
 
-        <span className="text-sm whitespace-nowrap text-muted">
+        <span className="text-muted-foreground text-sm whitespace-nowrap">
           {total} {total === 1 ? 'contact' : 'contacts'}
         </span>
       </div>

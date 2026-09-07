@@ -1,7 +1,16 @@
 import { ArrowDown, ArrowUp, Pencil, Trash2 } from 'lucide-react';
-import type { Contact, ListParams } from '../lib/api';
-import { cn, formatDate } from '../lib/utils';
-import { PriorityBadge } from './ui/Badge';
+import type { Contact, ListParams } from '@/lib/api';
+import { cn, formatDate } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { PriorityBadge } from '@/components/ui/priority-badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface ContactsTableProps {
   contacts: Contact[];
@@ -21,7 +30,7 @@ const COLUMNS: Array<{ key: ListParams['sort']; label: string }> = [
 
 /**
  * Two presentations of the same data:
- *   - a table on screens sm and up
+ *   - a shadcn/ui Table on screens sm and up
  *   - stacked cards below that, because a six-column table is unusable on a phone
  *
  * Sorting is triggered here but performed in Postgres, so it stays correct as
@@ -39,26 +48,30 @@ export function ContactsTable({
     <>
       {/* Desktop / tablet */}
       <div className="hidden overflow-x-auto sm:block">
-        <table className="w-full border-collapse text-left text-sm">
-          <thead>
-            <tr className="border-b border-line">
+        <Table>
+          <TableHeader>
+            <TableRow>
               {COLUMNS.map((column) => {
                 const active = sort === column.key;
                 return (
-                  <th key={column.key} scope="col" className="px-4 py-3">
+                  <TableHead
+                    key={column.key}
+                    aria-sort={
+                      active
+                        ? direction === 'asc'
+                          ? 'ascending'
+                          : 'descending'
+                        : 'none'
+                    }
+                  >
                     <button
                       type="button"
                       onClick={() => onSort(column.key)}
-                      aria-sort={
-                        active
-                          ? direction === 'asc'
-                            ? 'ascending'
-                            : 'descending'
-                          : 'none'
-                      }
                       className={cn(
                         'inline-flex items-center gap-1 font-semibold transition-colors',
-                        active ? 'text-ink' : 'text-muted hover:text-ink',
+                        active
+                          ? 'text-foreground'
+                          : 'hover:text-foreground',
                       )}
                     >
                       {column.label}
@@ -69,60 +82,63 @@ export function ContactsTable({
                           <ArrowDown className="size-3.5" aria-hidden />
                         ))}
                     </button>
-                  </th>
+                  </TableHead>
                 );
               })}
-              <th scope="col" className="px-4 py-3 font-semibold text-muted">
-                Where you met
-              </th>
-              <th scope="col" className="px-4 py-3">
+              <TableHead>Where you met</TableHead>
+              <TableHead>
                 <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {contacts.map((contact) => (
-              <tr
-                key={contact.id}
-                className="border-b border-line/60 last:border-0 hover:bg-canvas"
-              >
-                <td className="px-4 py-3">
-                  <div className="font-medium text-ink">{contact.name}</div>
+              <TableRow key={contact.id}>
+                <TableCell>
+                  <div className="text-foreground font-medium">
+                    {contact.name}
+                  </div>
                   {contact.role && (
-                    <div className="text-xs text-muted">{contact.role}</div>
+                    <div className="text-muted-foreground text-xs">
+                      {contact.role}
+                    </div>
                   )}
-                </td>
-                <td className="px-4 py-3 text-muted">{contact.company ?? '—'}</td>
-                <td className="px-4 py-3">
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {contact.company ?? '—'}
+                </TableCell>
+                <TableCell>
                   <PriorityBadge priority={contact.priority} />
-                </td>
-                <td className="px-4 py-3 text-muted">
+                </TableCell>
+                <TableCell className="text-muted-foreground">
                   {formatDate(contact.created_at)}
-                </td>
-                <td className="max-w-[16rem] truncate px-4 py-3 text-muted">
+                </TableCell>
+                <TableCell className="text-muted-foreground max-w-[16rem] truncate">
                   {contact.where_met ?? '—'}
-                </td>
-                <td className="px-4 py-3">
+                </TableCell>
+                <TableCell>
                   <RowActions
                     contact={contact}
                     onEdit={onEdit}
                     onDelete={onDelete}
                   />
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Mobile */}
-      <ul className="divide-y divide-line sm:hidden">
+      <ul className="divide-border divide-y sm:hidden">
         {contacts.map((contact) => (
           <li key={contact.id} className="px-4 py-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate font-medium text-ink">{contact.name}</p>
-                <p className="truncate text-sm text-muted">
+                <p className="text-foreground truncate font-medium">
+                  {contact.name}
+                </p>
+                <p className="text-muted-foreground truncate text-sm">
                   {[contact.role, contact.company].filter(Boolean).join(' · ') ||
                     '—'}
                 </p>
@@ -131,16 +147,18 @@ export function ContactsTable({
             </div>
 
             {contact.where_met && (
-              <p className="mt-2 text-sm text-muted">Met at {contact.where_met}</p>
+              <p className="text-muted-foreground mt-2 text-sm">
+                Met at {contact.where_met}
+              </p>
             )}
             {contact.notes && (
-              <p className="mt-1 line-clamp-2 text-sm text-muted">
+              <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
                 {contact.notes}
               </p>
             )}
 
             <div className="mt-3 flex items-center justify-between">
-              <span className="text-xs text-muted">
+              <span className="text-muted-foreground text-xs">
                 Added {formatDate(contact.created_at)}
               </span>
               <RowActions
@@ -167,22 +185,23 @@ function RowActions({
 }) {
   return (
     <div className="flex items-center gap-1">
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => onEdit(contact)}
         aria-label={`Edit ${contact.name}`}
-        className="rounded-lg p-2 text-muted transition-colors hover:bg-brand-soft hover:text-brand"
       >
         <Pencil className="size-4" />
-      </button>
-      <button
-        type="button"
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={() => onDelete(contact)}
         aria-label={`Delete ${contact.name}`}
-        className="rounded-lg p-2 text-muted transition-colors hover:bg-red-50 hover:text-red-600"
+        className="hover:text-destructive"
       >
         <Trash2 className="size-4" />
-      </button>
+      </Button>
     </div>
   );
 }

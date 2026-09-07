@@ -1,8 +1,16 @@
 import { useState, type FormEvent } from 'react';
-import { describeAuthError } from '../lib/authErrors';
-import { auth } from '../lib/neon';
-import { Button } from '../components/ui/Button';
-import { Field, inputClass } from '../components/ui/Field';
+import { describeAuthError } from '@/lib/authErrors';
+import { auth } from '@/lib/neon';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
 
 type Mode = 'sign-in' | 'sign-up';
 
@@ -63,78 +71,82 @@ export function SignIn() {
     <main className="flex min-h-dvh items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">
+          <h1 className="text-2xl font-semibold tracking-tight">
             Networking Tracker
           </h1>
-          <p className="mt-1 text-sm text-muted">
+          <p className="text-muted-foreground mt-1 text-sm">
             Keep track of the people you meet at Berkeley.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-line bg-surface p-6 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-ink">
-            {mode === 'sign-in' ? 'Sign in' : 'Create an account'}
-          </h2>
-
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <h2>{mode === 'sign-in' ? 'Sign in' : 'Create an account'}</h2>
+            </CardTitle>
+            <CardDescription>
+              {mode === 'sign-in'
+                ? 'Welcome back.'
+                : 'Your contacts are private to your account.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
             {error && (
               <p
                 role="alert"
-                className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+                className="border-destructive/30 bg-destructive/10 text-destructive rounded-lg border px-3 py-2 text-sm font-medium"
               >
                 {error}
               </p>
             )}
 
             {mode === 'sign-up' && (
-              <Field label="Name" htmlFor="signup-name">
-                <input
+              <FormField label="Name" htmlFor="signup-name">
+                <Input
                   id="signup-name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  className={inputClass()}
-                  autoComplete="name"
+                                    autoComplete="name"
                   placeholder="Jordan Lee"
                 />
-              </Field>
+              </FormField>
             )}
 
-            <Field label="Email" htmlFor="email" required>
-              <input
+            <FormField label="Email" htmlFor="email" required>
+              <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className={inputClass()}
-                autoComplete="email"
+                                autoComplete="email"
                 placeholder="you@berkeley.edu"
               />
-            </Field>
+            </FormField>
 
-            <Field
+            <FormField
               label="Password"
               htmlFor="password"
               required
               hint={mode === 'sign-up' ? 'At least 8 characters.' : undefined}
             >
-              <input
+              <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className={inputClass()}
-                autoComplete={
+                                autoComplete={
                   mode === 'sign-in' ? 'current-password' : 'new-password'
                 }
               />
-            </Field>
+            </FormField>
 
             <Button type="submit" loading={submitting} className="w-full">
               {mode === 'sign-in' ? 'Sign in' : 'Create account'}
             </Button>
           </form>
 
-          <p className="mt-4 text-center text-sm text-muted">
+          <p className="text-muted-foreground mt-4 text-center text-sm">
             {mode === 'sign-in' ? "Don't have an account?" : 'Already signed up?'}{' '}
             <button
               type="button"
@@ -142,12 +154,13 @@ export function SignIn() {
                 setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in');
                 setError(null);
               }}
-              className="font-medium text-brand underline underline-offset-4"
+              className="text-primary font-medium underline underline-offset-4"
             >
               {mode === 'sign-in' ? 'Create one' : 'Sign in'}
             </button>
           </p>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </main>
   );

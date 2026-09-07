@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test';
-import { account, addContact, clearContacts, dialog, shot, signIn, visibleText } from './helpers';
+import {
+  account,
+  addContact,
+  chooseOption,
+  clearContacts,
+  dialog,
+  shot,
+  signIn,
+  visibleText,
+} from './helpers';
 
 /**
  * Evidence: create, view, edit, delete, sort, filter — and the data survives a
@@ -36,7 +45,7 @@ test('create, view, edit, delete, and survive a refresh', async ({ page }) => {
   // Edit
   await page.getByRole('button', { name: 'Edit Ada Lovelace' }).click();
   await dialog(page).getByLabel('Company').fill('Babbage & Co');
-  await dialog(page).getByLabel('Priority').selectOption('low');
+  await chooseOption(dialog(page), 'Priority', 'Low');
   await dialog(page).getByRole('button', { name: 'Save changes' }).click();
   await expect(page.getByText('Changes saved.')).toBeVisible();
   await expect(visibleText(page, 'Babbage & Co')).toBeVisible();
@@ -65,13 +74,13 @@ test('sort and filter', async ({ page }) => {
   await shot(page, '09-sorted-by-name');
 
   // Filter to high priority only.
-  await page.getByLabel('Filter by priority').selectOption('high');
+  await chooseOption(page, 'Filter by priority', 'High');
   await expect(page.locator('tbody tr')).toHaveCount(1);
   await expect(visibleText(page, 'Ada Lovelace')).toBeVisible();
   await shot(page, '10-filtered-high-priority');
 
   // Search.
-  await page.getByLabel('Filter by priority').selectOption('');
+  await chooseOption(page, 'Filter by priority', 'All priorities');
   await page.getByLabel('Search contacts').fill('Northwind');
   await expect(page.locator('tbody tr')).toHaveCount(1);
   await expect(visibleText(page, 'Marcus Chen')).toBeVisible();

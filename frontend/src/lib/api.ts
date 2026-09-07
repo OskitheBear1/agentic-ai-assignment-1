@@ -1,4 +1,4 @@
-import { getAccessToken } from './neon';
+import { getAccessToken } from '@/lib/neon';
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '');
 

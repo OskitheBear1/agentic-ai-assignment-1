@@ -5,19 +5,26 @@ import {
   type Contact,
   type ContactInput,
   type ListParams,
-} from '../lib/api';
-import { auth, clearAccessToken } from '../lib/neon';
-import { ContactForm } from '../components/ContactForm';
-import { ContactsTable } from '../components/ContactsTable';
-import { Toolbar } from '../components/Toolbar';
-import { Button } from '../components/ui/Button';
-import { Modal } from '../components/ui/Modal';
+} from '@/lib/api';
+import { auth, clearAccessToken } from '@/lib/neon';
+import { ContactForm } from '@/components/ContactForm';
+import { ContactsTable } from '@/components/ContactsTable';
+import { Toolbar } from '@/components/Toolbar';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   EmptyState,
   ErrorState,
   LoadingState,
   Toast,
-} from '../components/ui/States';
+} from '@/components/ui/states';
 
 type Dialog =
   | { kind: 'closed' }
@@ -113,13 +120,13 @@ export function Contacts({ userEmail }: { userEmail: string }) {
 
   return (
     <div className="min-h-dvh">
-      <header className="border-b border-line bg-surface">
+      <header className="bg-card border-border border-b">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-4">
           <div className="min-w-0">
             <h1 className="text-lg font-semibold tracking-tight text-ink">
               Networking Tracker
             </h1>
-            <p className="truncate text-xs text-muted">{userEmail}</p>
+            <p className="text-muted-foreground truncate text-xs">{userEmail}</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -144,7 +151,7 @@ export function Contacts({ userEmail }: { userEmail: string }) {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-6">
-        <div className="overflow-hidden rounded-2xl border border-line bg-surface">
+        <div className="bg-card border-border overflow-hidden rounded-2xl border">
           <Toolbar
             params={params}
             onChange={(next) => setParams((current) => ({ ...current, ...next }))}
@@ -214,62 +221,81 @@ export function Contacts({ userEmail }: { userEmail: string }) {
         </div>
       </main>
 
-      <Modal
+      {/* Each dialog mounts its contents only while open, so the create and
+          edit forms never put duplicate input ids in the document at once. */}
+      <Dialog
         open={dialog.kind === 'create'}
-        title="Add contact"
-        onClose={() => setDialog({ kind: 'closed' })}
+        onOpenChange={(open) => !open && setDialog({ kind: 'closed' })}
       >
-        <ContactForm
-          submitLabel="Add contact"
-          onSubmit={handleCreate}
-          onCancel={() => setDialog({ kind: 'closed' })}
-        />
-      </Modal>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add contact</DialogTitle>
+            <DialogDescription>
+              Someone you want to stay connected with.
+            </DialogDescription>
+          </DialogHeader>
+          {dialog.kind === 'create' && (
+            <ContactForm
+              submitLabel="Add contact"
+              onSubmit={handleCreate}
+              onCancel={() => setDialog({ kind: 'closed' })}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
-      <Modal
+      <Dialog
         open={dialog.kind === 'edit'}
-        title="Edit contact"
-        onClose={() => setDialog({ kind: 'closed' })}
+        onOpenChange={(open) => !open && setDialog({ kind: 'closed' })}
       >
-        {dialog.kind === 'edit' && (
-          <ContactForm
-            initial={dialog.contact}
-            submitLabel="Save changes"
-            onSubmit={(input) => handleUpdate(dialog.contact.id, input)}
-            onCancel={() => setDialog({ kind: 'closed' })}
-          />
-        )}
-      </Modal>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit contact</DialogTitle>
+            <DialogDescription>Update this contact's details.</DialogDescription>
+          </DialogHeader>
+          {dialog.kind === 'edit' && (
+            <ContactForm
+              initial={dialog.contact}
+              submitLabel="Save changes"
+              onSubmit={(input) => handleUpdate(dialog.contact.id, input)}
+              onCancel={() => setDialog({ kind: 'closed' })}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
-      <Modal
+      <Dialog
         open={dialog.kind === 'delete'}
-        title="Delete contact"
-        onClose={() => setDialog({ kind: 'closed' })}
+        onOpenChange={(open) => !open && setDialog({ kind: 'closed' })}
       >
-        {dialog.kind === 'delete' && (
-          <div className="space-y-4">
-            <p className="text-sm text-muted">
-              Delete <span className="font-medium text-ink">{dialog.contact.name}</span>
-              ? This cannot be undone.
-            </p>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => setDialog({ kind: 'closed' })}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="danger"
-                loading={deleting}
-                onClick={() => void handleDelete(dialog.contact)}
-              >
-                Delete
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete contact</DialogTitle>
+            <DialogDescription>
+              {dialog.kind === 'delete'
+                ? `Delete ${dialog.contact.name}? This cannot be undone.`
+                : null}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDialog({ kind: 'closed' })}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              loading={deleting}
+              onClick={() =>
+                dialog.kind === 'delete' && void handleDelete(dialog.contact)
+              }
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {toast && <Toast message={toast} />}
     </div>

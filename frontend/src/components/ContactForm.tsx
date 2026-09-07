@@ -1,14 +1,21 @@
 import { useState, type FormEvent } from 'react';
+import { ApiError, type Contact, type ContactInput, type Priority } from '@/lib/api';
+import { Button } from '@/components/ui/button';
+import { FormField } from '@/components/ui/form-field';
+import { Input } from '@/components/ui/input';
 import {
-  ApiError,
-  type Contact,
-  type ContactInput,
-  type Priority,
-} from '../lib/api';
-import { Button } from './ui/Button';
-import { Field, inputClass } from './ui/Field';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 const PRIORITIES: Priority[] = ['high', 'medium', 'low'];
+
+const priorityLabel = (priority: string) =>
+  priority.charAt(0).toUpperCase() + priority.slice(1);
 
 interface ContactFormProps {
   initial?: Contact;
@@ -18,7 +25,7 @@ interface ContactFormProps {
 }
 
 /**
- * Create/edit form.
+ * Create/edit form, built from shadcn/ui primitives.
  *
  * Client-side checks here are a convenience — they give instant feedback. The
  * authoritative rules live in the Node backend (Zod) and in Postgres (CHECK
@@ -65,10 +72,7 @@ export function ContactForm({
       if (error instanceof ApiError && error.fieldErrors.length > 0) {
         setErrors(
           Object.fromEntries(
-            error.fieldErrors.map((fieldError) => [
-              fieldError.field,
-              fieldError.message,
-            ]),
+            error.fieldErrors.map((f) => [f.field, f.message]),
           ),
         );
         setFormError(error.message);
@@ -89,95 +93,100 @@ export function ContactForm({
       {formError && (
         <p
           role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700"
+          className="border-destructive/30 bg-destructive/10 text-destructive rounded-lg border px-3 py-2 text-sm font-medium"
         >
           {formError}
         </p>
       )}
 
-      <Field label="Name" htmlFor="name" required error={errors.name}>
-        <input
+      <FormField label="Name" htmlFor="name" required error={errors.name}>
+        <Input
           id="name"
           name="name"
           value={values.name}
           onChange={(event) => set('name', event.target.value)}
-          className={inputClass(Boolean(errors.name))}
           placeholder="Ada Lovelace"
           aria-invalid={Boolean(errors.name)}
           aria-describedby={errors.name ? 'name-error' : undefined}
           autoFocus
         />
-      </Field>
+      </FormField>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Company" htmlFor="company" error={errors.company}>
-          <input
+        <FormField label="Company" htmlFor="company" error={errors.company}>
+          <Input
             id="company"
             value={values.company}
             onChange={(event) => set('company', event.target.value)}
-            className={inputClass(Boolean(errors.company))}
             placeholder="Bain & Company"
+            aria-invalid={Boolean(errors.company)}
           />
-        </Field>
+        </FormField>
 
-        <Field label="Role" htmlFor="role" error={errors.role}>
-          <input
+        <FormField label="Role" htmlFor="role" error={errors.role}>
+          <Input
             id="role"
             value={values.role}
             onChange={(event) => set('role', event.target.value)}
-            className={inputClass(Boolean(errors.role))}
             placeholder="Associate Consultant"
+            aria-invalid={Boolean(errors.role)}
           />
-        </Field>
+        </FormField>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Where you met" htmlFor="where_met" error={errors.where_met}>
-          <input
+        <FormField
+          label="Where you met"
+          htmlFor="where_met"
+          error={errors.where_met}
+        >
+          <Input
             id="where_met"
             value={values.where_met}
             onChange={(event) => set('where_met', event.target.value)}
-            className={inputClass(Boolean(errors.where_met))}
             placeholder="Haas Consulting Club mixer"
+            aria-invalid={Boolean(errors.where_met)}
           />
-        </Field>
+        </FormField>
 
-        <Field
+        <FormField
           label="Priority"
           htmlFor="priority"
           error={errors.priority}
           hint="How soon you want to follow up."
         >
-          <select
-            id="priority"
+          <Select
             value={values.priority}
-            onChange={(event) =>
-              set('priority', event.target.value as Priority)
-            }
-            className={inputClass(Boolean(errors.priority))}
+            onValueChange={(value) => set('priority', value as Priority)}
           >
-            {PRIORITIES.map((priority) => (
-              <option key={priority} value={priority}>
-                {priority.charAt(0).toUpperCase() + priority.slice(1)}
-              </option>
-            ))}
-          </select>
-        </Field>
+            <SelectTrigger id="priority" className="w-full">
+              {/* base-ui renders the raw value unless given a label mapping. */}
+              <SelectValue>{(value) => priorityLabel(String(value))}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {PRIORITIES.map((priority) => (
+                <SelectItem key={priority} value={priority}>
+                  {priorityLabel(priority)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
       </div>
 
-      <Field label="Notes" htmlFor="notes" error={errors.notes}>
-        <textarea
+      <FormField label="Notes" htmlFor="notes" error={errors.notes}>
+        <Textarea
           id="notes"
           rows={3}
           value={values.notes}
           onChange={(event) => set('notes', event.target.value)}
-          className={inputClass(Boolean(errors.notes))}
           placeholder="Talked about her fellowship. Send the article on impact investing."
+          aria-invalid={Boolean(errors.notes)}
         />
-      </Field>
+      </FormField>
 
       <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="secondary" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
         <Button type="submit" loading={saving}>
