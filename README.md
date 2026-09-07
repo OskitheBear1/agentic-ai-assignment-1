@@ -401,8 +401,17 @@ SQL; and rejects any request body that tries to set `user_id`, `id`, or
 `created_at`.
 
 ```
-TODO_TEST_OUTPUT
+ RUN  v3.2.7 /agentic-ai-assignment-1/backend
+
+ ✓ tests/validation.test.ts (34 tests) 5ms
+
+ Test Files  1 passed (1)
+      Tests  34 passed (34)
+   Duration  361ms
 ```
+
+All 34 assertions cover the rules above. The suite runs in under half a second
+because it touches nothing external.
 
 ### Live integration tests — real Neon, running backend
 
@@ -421,6 +430,16 @@ public Data API directly with a valid token, which is the attack RLS has to stop
 running API, bypassing the browser entirely, and asserts each one fails with a
 clear 400 rather than a crash or a partial write.
 
+Both suites pass against real Neon:
+
+```
+ ✓ tests/server-validation.test.ts (10 tests) 1355ms
+ ✓ tests/privacy.test.ts (13 tests) 3190ms
+
+ Test Files  2 passed (2)
+      Tests  23 passed (23)
+```
+
 ### End-to-end tests — also the screenshot generator
 
 ```bash
@@ -431,6 +450,17 @@ npm run test:e2e
 Covers sign-in and sign-out, the full create/view/edit/delete cycle, persistence
 across a refresh, sorting, filtering, search, invalid input, the two-user privacy
 check, and the mobile layout — writing the screenshots in this README as it goes.
+
+```
+ ✓ [desktop] › auth.spec.ts › sign in and sign out (2.8s)
+ ✓ [desktop] › contacts.spec.ts › create, view, edit, delete, and survive a refresh (9.3s)
+ ✓ [desktop] › contacts.spec.ts › sort and filter (13.0s)
+ ✓ [desktop] › privacy.spec.ts › User A cannot see User B contacts (8.7s)
+ ✓ [desktop] › validation.spec.ts › an empty name is rejected with a clear message (2.1s)
+ ✓ [mobile]  › responsive.spec.ts › mobile layout (6.2s)
+
+  6 passed (44.5s)
+```
 
 Point it at production instead of localhost:
 
@@ -450,7 +480,7 @@ E2E_BASE_URL=TODO_FRONTEND_URL npm run test:e2e
 | Sort and filter | [`docs/09-sorted-by-name.png`](docs/09-sorted-by-name.png), [`docs/10-filtered-high-priority.png`](docs/10-filtered-high-priority.png), [`docs/11-search-results.png`](docs/11-search-results.png) |
 | Invalid input fails safely | [`docs/12-invalid-empty-name.png`](docs/12-invalid-empty-name.png), plus `backend/tests/server-validation.test.ts` |
 | User A cannot access User B's contacts | [`docs/13-user-b-contacts.png`](docs/13-user-b-contacts.png), [`docs/14-user-a-cannot-see-user-b.png`](docs/14-user-a-cannot-see-user-b.png), plus `backend/tests/privacy.test.ts` |
-| Automated test passes | `npm test` output above |
+| Automated test passes | 34 unit + 23 live + 6 end-to-end, all passing — output above |
 | Secrets are server-only | [Environment variables](#environment-variables); `DATABASE_URL` appears only in `db/migrate.ts` |
 | Schema and RLS explained | [Database schema](#database-schema), [Authentication and RLS ownership](#authentication-and-rls-ownership) |
 | Mobile friendly | [`docs/15-mobile-list.png`](docs/15-mobile-list.png), [`docs/16-mobile-form.png`](docs/16-mobile-form.png) |

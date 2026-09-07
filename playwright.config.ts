@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import 'dotenv/config';
+import './e2e/env';
 
 /**
  * End-to-end tests that double as the README's evidence generator.
@@ -31,6 +31,7 @@ export default defineConfig({
   projects: [
     {
       name: 'desktop',
+      testIgnore: /responsive\.spec\.ts/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } },
     },
     {

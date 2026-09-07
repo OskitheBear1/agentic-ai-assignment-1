@@ -1,5 +1,6 @@
 import { Search } from 'lucide-react';
 import type { ListParams, Priority } from '../lib/api';
+import { cn } from '../lib/utils';
 import { inputClass } from './ui/Field';
 
 interface ToolbarProps {
@@ -35,7 +36,7 @@ export function Toolbar({ params, onChange, total }: ToolbarProps) {
           }
           placeholder="Search name, company, role"
           aria-label="Search contacts"
-          className={`${inputClass()} pl-9`}
+          className={cn(inputClass(), 'pl-9')}
         />
       </div>
 
@@ -53,7 +54,7 @@ export function Toolbar({ params, onChange, total }: ToolbarProps) {
                 | undefined,
             })
           }
-          className={`${inputClass()} w-auto`}
+          className={cn(inputClass(), 'w-auto')}
         >
           <option value="">All priorities</option>
           {PRIORITIES.map((priority) => (
@@ -72,7 +73,7 @@ export function Toolbar({ params, onChange, total }: ToolbarProps) {
           onChange={(event) =>
             onChange({ sort: event.target.value as ListParams['sort'] })
           }
-          className={`${inputClass()} w-auto`}
+          className={cn(inputClass(), 'w-auto')}
         >
           {SORTS.map((option) => (
             <option key={option.value} value={option.value}>

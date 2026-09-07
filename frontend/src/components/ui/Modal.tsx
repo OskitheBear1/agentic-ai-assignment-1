@@ -11,6 +11,14 @@ interface ModalProps {
 /**
  * A dialog built on the native <dialog> element, so focus trapping, Escape to
  * close, and the backdrop come from the browser rather than hand-rolled JS.
+ *
+ * Children render only while the dialog is open. That matters for more than
+ * tidiness: the create and edit dialogs contain the same form, so keeping both
+ * mounted would put two elements with `id="name"`, `id="company"` and so on in
+ * the document at once. Duplicate ids are invalid HTML, and they break
+ * label-to-input association — a screen reader (or a test) following the label
+ * lands on the hidden copy. Unmounting also gives the edit form fresh state
+ * each time it opens, rather than the previous contact's values.
  */
 export function Modal({ open, title, onClose, children }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -45,7 +53,9 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
           <X className="size-5" />
         </button>
       </div>
-      <div className="max-h-[70vh] overflow-y-auto px-5 py-4">{children}</div>
+      <div className="max-h-[70vh] overflow-y-auto px-5 py-4">
+        {open ? children : null}
+      </div>
     </dialog>
   );
 }

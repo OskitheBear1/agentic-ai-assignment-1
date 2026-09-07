@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import 'dotenv/config';
+import './env';
 
 export const DOCS = 'docs';
 
@@ -47,12 +47,36 @@ export async function signIn(page: Page, user: Account): Promise<void> {
     await page.getByRole('button', { name: 'Create account' }).click();
   }
 
-  await expect(page.getByRole('button', { name: /Add contact|Add/ })).toBeVisible();
+  // Anchored: the empty state also has an "Add your first contact" button.
+  await expect(
+    page.getByRole('button', { name: /^(Add contact|Add)$/ }),
+  ).toBeVisible();
 }
 
 export async function signOut(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+}
+
+/**
+ * Text as the user actually sees it.
+ *
+ * The desktop table and the mobile card list are BOTH in the DOM — one is
+ * hidden with CSS at any given breakpoint — so a plain getByText matches twice
+ * and trips strict mode. Filtering to visible picks whichever layout is live.
+ */
+export function visibleText(page: Page, text: string) {
+  return page.getByText(text).filter({ visible: true });
+}
+
+/**
+ * The open create/edit dialog.
+ *
+ * Form fields are looked up inside it rather than on the whole page, because
+ * "Priority" also matches the toolbar's filter dropdown.
+ */
+export function dialog(page: Page) {
+  return page.getByRole('dialog');
 }
 
 /** Fills and submits the add-contact dialog. */
@@ -67,31 +91,52 @@ export async function addContact(
     priority?: 'high' | 'medium' | 'low';
   },
 ): Promise<void> {
-  await page.getByRole('button', { name: /^Add contact$|^Add$/ }).first().click();
+  await page.getByRole('button', { name: /^(Add contact|Add)$/ }).first().click();
 
-  await page.getByLabel('Name').fill(contact.name);
-  if (contact.company) await page.getByLabel('Company').fill(contact.company);
-  if (contact.role) await page.getByLabel('Role').fill(contact.role);
+  const form = dialog(page);
+  await form.getByLabel('Name').fill(contact.name);
+  if (contact.company) await form.getByLabel('Company').fill(contact.company);
+  if (contact.role) await form.getByLabel('Role').fill(contact.role);
   if (contact.whereMet)
-    await page.getByLabel('Where you met').fill(contact.whereMet);
-  if (contact.notes) await page.getByLabel('Notes').fill(contact.notes);
+    await form.getByLabel('Where you met').fill(contact.whereMet);
+  if (contact.notes) await form.getByLabel('Notes').fill(contact.notes);
   if (contact.priority)
-    await page.getByLabel('Priority').selectOption(contact.priority);
+    await form.getByLabel('Priority').selectOption(contact.priority);
 
-  await page.getByRole('button', { name: 'Add contact' }).last().click();
+  await form.getByRole('button', { name: 'Add contact' }).click();
   await expect(page.getByText('Contact added.')).toBeVisible();
 }
 
-/** Deletes every contact so each spec starts from a known state. */
+/**
+ * Deletes every contact so each spec starts from a known state.
+ *
+ * Waits for the list to finish loading first — otherwise it can run against an
+ * empty skeleton, conclude there is nothing to delete, and leave rows behind
+ * for the next spec to trip over.
+ */
 export async function clearContacts(page: Page): Promise<void> {
+  await waitForList(page);
+
   for (;;) {
-    const deleteButton = page.getByRole('button', { name: /^Delete / }).first();
-    if (!(await deleteButton.isVisible().catch(() => false))) return;
+    const deleteButton = page.getByRole('button', { name: /^Delete .+/ }).first();
+    if ((await deleteButton.count()) === 0) break;
 
     await deleteButton.click();
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(page.getByText('Contact deleted.')).toBeVisible();
+    await expect(page.getByText('Contact deleted.')).toBeHidden({ timeout: 5000 });
   }
+
+  await expect(page.getByText(/No contacts yet|No matching contacts/)).toBeVisible();
+}
+
+/** Resolves once the contact list has loaded — either rows or the empty state. */
+export async function waitForList(page: Page): Promise<void> {
+  await expect(
+    page
+      .getByText(/No contacts yet|No matching contacts/)
+      .or(page.getByRole('button', { name: /^Delete .+/ }).first()),
+  ).toBeVisible();
 }
 
 /** Screenshot helper that names files predictably for the README. */

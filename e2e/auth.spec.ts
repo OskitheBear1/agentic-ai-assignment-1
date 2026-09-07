@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { account, shot, signIn, signOut } from './helpers';
+import { account, shot, signIn, signOut, visibleText } from './helpers';
 
 /** Evidence: a user can sign in and sign out. */
 test('sign in and sign out', async ({ page }) => {
@@ -10,7 +10,7 @@ test('sign in and sign out', async ({ page }) => {
   await shot(page, '01-sign-in-page');
 
   await signIn(page, user);
-  await expect(page.getByText(user.email)).toBeVisible();
+  await expect(visibleText(page, user.email)).toBeVisible();
   await shot(page, '02-signed-in');
 
   await signOut(page);

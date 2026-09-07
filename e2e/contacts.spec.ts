@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { account, addContact, clearContacts, shot, signIn } from './helpers';
+import { account, addContact, clearContacts, dialog, shot, signIn, visibleText } from './helpers';
 
 /**
  * Evidence: create, view, edit, delete, sort, filter — and the data survives a
@@ -24,29 +24,29 @@ test('create, view, edit, delete, and survive a refresh', async ({ page }) => {
     notes: 'Send her the impact investing article.',
     priority: 'high',
   });
-  await expect(page.getByText('Ada Lovelace')).toBeVisible();
+  await expect(visibleText(page, 'Ada Lovelace')).toBeVisible();
   await shot(page, '05-contact-created');
 
   // Survives a refresh — proof it is persisted server-side.
   await page.reload();
-  await expect(page.getByText('Ada Lovelace')).toBeVisible();
-  await expect(page.getByText('Analytical Engines')).toBeVisible();
+  await expect(visibleText(page, 'Ada Lovelace')).toBeVisible();
+  await expect(visibleText(page, 'Analytical Engines')).toBeVisible();
   await shot(page, '06-survives-refresh');
 
   // Edit
   await page.getByRole('button', { name: 'Edit Ada Lovelace' }).click();
-  await page.getByLabel('Company').fill('Babbage & Co');
-  await page.getByLabel('Priority').selectOption('low');
-  await page.getByRole('button', { name: 'Save changes' }).click();
+  await dialog(page).getByLabel('Company').fill('Babbage & Co');
+  await dialog(page).getByLabel('Priority').selectOption('low');
+  await dialog(page).getByRole('button', { name: 'Save changes' }).click();
   await expect(page.getByText('Changes saved.')).toBeVisible();
-  await expect(page.getByText('Babbage & Co')).toBeVisible();
+  await expect(visibleText(page, 'Babbage & Co')).toBeVisible();
   await shot(page, '07-contact-edited');
 
   // Delete
   await page.getByRole('button', { name: 'Delete Ada Lovelace' }).click();
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   await expect(page.getByText('Contact deleted.')).toBeVisible();
-  await expect(page.getByText('Ada Lovelace')).toBeHidden();
+  await expect(visibleText(page, 'Ada Lovelace')).toHaveCount(0);
   await shot(page, '08-contact-deleted');
 });
 
@@ -59,7 +59,7 @@ test('sort and filter', async ({ page }) => {
   await addContact(page, { name: 'Marcus Chen', company: 'Northwind', priority: 'medium' });
 
   // Sort by name ascending via the column header.
-  await page.getByRole('button', { name: 'Name' }).click();
+  await page.getByRole('button', { name: 'Name', exact: true }).click();
   const firstRow = page.locator('tbody tr').first();
   await expect(firstRow).toContainText('Ada Lovelace');
   await shot(page, '09-sorted-by-name');
@@ -67,14 +67,14 @@ test('sort and filter', async ({ page }) => {
   // Filter to high priority only.
   await page.getByLabel('Filter by priority').selectOption('high');
   await expect(page.locator('tbody tr')).toHaveCount(1);
-  await expect(page.getByText('Ada Lovelace')).toBeVisible();
+  await expect(visibleText(page, 'Ada Lovelace')).toBeVisible();
   await shot(page, '10-filtered-high-priority');
 
   // Search.
   await page.getByLabel('Filter by priority').selectOption('');
   await page.getByLabel('Search contacts').fill('Northwind');
   await expect(page.locator('tbody tr')).toHaveCount(1);
-  await expect(page.getByText('Marcus Chen')).toBeVisible();
+  await expect(visibleText(page, 'Marcus Chen')).toBeVisible();
   await shot(page, '11-search-results');
 
   await page.getByLabel('Search contacts').fill('');
