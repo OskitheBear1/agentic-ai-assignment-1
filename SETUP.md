@@ -11,17 +11,23 @@ https://console.neon.tech → **New Project**
 - Postgres version: the default is fine
 - Region: pick the one closest to you
 
-## 2. Enable Managed Better Auth
+## 2. Get the Auth URL (Managed Better Auth)
 
-In the project sidebar: **Auth** → **Enable Managed Better Auth**.
+In the project sidebar: **Auth**.
 
-Copy the **Auth URL**. It looks like:
+Managed Better Auth is provisioned automatically on new projects, so there is
+usually nothing to enable. If the page says *"Ready for your first users"*, it is
+already on — just copy the **Auth URL** shown there. It looks like:
 
 ```
 https://ep-something-12345678.us-west-2.aws.neon.tech/neondb/auth
 ```
 
-Enable **Email and password** as a sign-in method if it is not on by default.
+If your project predates that default and the page offers an enable button,
+click it first. The CLI equivalent is `npx neon@latest neon-auth enable`.
+
+Check that **Email and password** is on as a sign-in method — this app uses it
+exclusively.
 
 ## 3. Enable the Data API
 
