@@ -6,7 +6,7 @@ import {
   type ContactInput,
   type ListParams,
 } from '../lib/api';
-import { auth } from '../lib/neon';
+import { auth, clearAccessToken } from '../lib/neon';
 import { ContactForm } from '../components/ContactForm';
 import { ContactsTable } from '../components/ContactsTable';
 import { Toolbar } from '../components/Toolbar';
@@ -130,7 +130,10 @@ export function Contacts({ userEmail }: { userEmail: string }) {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => void auth.signOut()}
+              onClick={() => {
+                clearAccessToken();
+                void auth.signOut();
+              }}
               aria-label="Sign out"
             >
               <LogOut className="size-4" aria-hidden />

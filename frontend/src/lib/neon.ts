@@ -11,6 +11,8 @@ import { BetterAuthReactAdapter } from '@neondatabase/neon-js/auth/react/adapter
  * own rows. The Postgres connection string is a different matter entirely and
  * never appears in this codebase's frontend.
  */
+const AUTH_URL = import.meta.env.VITE_NEON_AUTH_URL.replace(/\/+$/, '');
+
 export const neon = createClient({
   auth: {
     url: import.meta.env.VITE_NEON_AUTH_URL,
@@ -26,13 +28,64 @@ export const auth = neon.auth;
 /**
  * The signed-in user's JWT, or null when signed out.
  *
- * This is the same token the Neon SDK attaches to its own Data API calls — the
- * SDK's internal `getJWTToken()` reads exactly this field. We send it to our
- * Node backend, which verifies the signature against Neon's public JWKS and
- * then forwards it to the Data API, so Postgres evaluates `auth.user_id()`
- * against the real caller at every layer.
+ * Worth understanding, because there are two different "tokens" in play:
+ *
+ *   - The **session token** is opaque and lives in a cookie. It identifies the
+ *     session to the auth service. The Data API rejects it outright
+ *     ("not a valid JWT encoding").
+ *   - The **JWT** is what everything downstream actually needs. Its `sub` claim
+ *     is what `auth.user_id()` resolves to inside the RLS policies. You get it
+ *     by exchanging the session cookie at `GET <auth url>/token`.
+ *
+ * `credentials: 'include'` is required: the session cookie is set on Neon's
+ * domain, so it is cross-site from the app's point of view.
+ *
+ * Tokens are short-lived, so the result is cached until shortly before it
+ * expires rather than fetched on every request.
  */
+let cached: { token: string; expiresAt: number } | null = null;
+
 export async function getAccessToken(): Promise<string | null> {
-  const { data } = await auth.getSession();
-  return data?.session?.token ?? null;
+  // Re-use the cached token until 30s before it expires.
+  if (cached && Date.now() < cached.expiresAt - 30_000) {
+    return cached.token;
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${AUTH_URL}/token`, { credentials: 'include' });
+  } catch {
+    return null;
+  }
+
+  if (!response.ok) {
+    cached = null;
+    return null;
+  }
+
+  const { token } = (await response.json()) as { token?: string };
+  if (!token) {
+    cached = null;
+    return null;
+  }
+
+  cached = { token, expiresAt: expiryOf(token) };
+  return token;
+}
+
+/** Reads the `exp` claim so we know when to refetch. */
+function expiryOf(token: string): number {
+  try {
+    const payload = JSON.parse(
+      atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')),
+    ) as { exp?: number };
+    return payload.exp ? payload.exp * 1000 : Date.now() + 60_000;
+  } catch {
+    return Date.now() + 60_000;
+  }
+}
+
+/** Drops the cached token. Call on sign-out so the next user starts clean. */
+export function clearAccessToken(): void {
+  cached = null;
 }

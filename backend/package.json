@@ -11,7 +11,7 @@
     "test": "vitest run tests/validation.test.ts",
     "test:privacy": "vitest run tests/privacy.test.ts --testTimeout=60000",
     "test:all": "vitest run --testTimeout=60000",
-    "migrate": "tsx ../db/migrate.ts",
+    "migrate": "tsx src/migrate.ts",
     "typecheck": "tsc --noEmit",
     "test:live": "vitest run tests/privacy.test.ts tests/server-validation.test.ts --testTimeout=60000"
   },

@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './loadEnv.js';
 
 /**
  * Server-only configuration. Nothing here is ever sent to the browser.

@@ -5,15 +5,17 @@
  * one-off deploy step), never inside a request handler, and the connection
  * string never reaches the browser.
  *
- * Usage, from backend/:  npm run migrate
+ * Usage, from the repo root:  npm run migrate
  */
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { neon } from '@neondatabase/serverless';
-import 'dotenv/config';
+import './loadEnv.js';
 
-const here = dirname(fileURLToPath(import.meta.url));
+// SQL lives in db/ at the repo root; this runner lives in the backend so it
+// resolves @neondatabase/serverless from backend/node_modules.
+const sqlDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'db');
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl) {
@@ -53,7 +55,7 @@ function splitStatements(source: string): string[] {
 }
 
 async function run(file: string): Promise<void> {
-  const source = await readFile(join(here, file), 'utf8');
+  const source = await readFile(join(sqlDir, file), 'utf8');
   const statements = splitStatements(source);
 
   console.log(`\n${file} — ${statements.length} statements`);
