@@ -5,6 +5,7 @@
   "description": "Secure Networking Tracker \u2014 React frontend, Node backend, Neon Postgres with Row Level Security.",
   "scripts": {
     "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "dev": "concurrently --names \"api,web\" --prefix-colors \"blue,magenta\" \"npm:dev:backend\" \"npm:dev:frontend\"",
     "migrate": "npm --prefix backend run migrate",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
+    "concurrently": "^10.0.5",
     "dotenv": "^17.2.3"
   }
 }

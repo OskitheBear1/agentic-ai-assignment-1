@@ -228,12 +228,13 @@ policies exist, so a partial migration cannot pass silently.
 
 ### 5. Run it
 
-Two terminals:
-
 ```bash
-npm run dev:backend    # http://localhost:3000
-npm run dev:frontend   # http://localhost:5173
+npm run dev
 ```
+
+That starts both services together — the API on http://localhost:3000 and the
+app on http://localhost:5173. To run them in separate terminals instead, use
+`npm run dev:backend` and `npm run dev:frontend`.
 
 Open http://localhost:5173 and create an account.
 

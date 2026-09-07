@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { describeAuthError } from '../lib/authErrors';
 import { auth } from '../lib/neon';
 import { Button } from '../components/ui/Button';
 import { Field, inputClass } from '../components/ui/Field';
@@ -45,12 +46,14 @@ export function SignIn() {
               name: name.trim() || email.split('@')[0],
             });
 
-      if (result.error) {
-        setError(result.error.message ?? 'That did not work. Please try again.');
+      // Some failures resolve with an error rather than throwing.
+      if (result?.error) {
+        setError(describeAuthError(result.error));
       }
       // On success the session hook re-renders the app; nothing else to do.
-    } catch {
-      setError('Could not reach the sign-in service. Check your connection.');
+    } catch (caught) {
+      // ...and some throw. Both paths end up with the server's own message.
+      setError(describeAuthError(caught));
     } finally {
       setSubmitting(false);
     }

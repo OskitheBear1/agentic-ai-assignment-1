@@ -21,36 +21,40 @@ export function account(which: 'A' | 'B'): Account {
   return { email, password };
 }
 
-/** Signs in, creating the account first if it does not exist yet. */
+/**
+ * Signs in, creating the account first if it does not exist yet.
+ *
+ * "Signed in" is detected by the Sign out button, NOT by the "Networking
+ * Tracker" heading — that heading appears on the sign-in screen too, so keying
+ * off it would report success while still signed out.
+ */
 export async function signIn(page: Page, user: Account): Promise<void> {
   await page.goto('/');
 
-  // Already signed in from a previous test in this worker.
-  if (await page.getByRole('button', { name: 'Sign out' }).isVisible().catch(() => false)) {
-    return;
-  }
+  const signedIn = page.getByRole('button', { name: 'Sign out' });
+  const signInHeading = page.getByRole('heading', { name: 'Sign in' });
+
+  // Already signed in from an earlier test in this worker.
+  await expect(signedIn.or(signInHeading).first()).toBeVisible();
+  if (await signedIn.isVisible()) return;
 
   await page.getByLabel('Email').fill(user.email);
   await page.getByLabel('Password').fill(user.password);
   await page.getByRole('button', { name: 'Sign in' }).click();
 
-  const signedIn = page.getByRole('heading', { name: 'Networking Tracker' });
-  const failed = page.getByRole('alert');
+  const failure = page.getByRole('alert');
+  await expect(signedIn.or(failure).first()).toBeVisible();
 
-  await expect(signedIn.or(failed).first()).toBeVisible();
+  if (await signedIn.isVisible()) return;
 
-  // No account yet — create one, then continue.
-  if (await failed.isVisible().catch(() => false)) {
-    await page.getByRole('button', { name: 'Create one' }).click();
-    await page.getByLabel('Email').fill(user.email);
-    await page.getByLabel('Password').fill(user.password);
-    await page.getByRole('button', { name: 'Create account' }).click();
-  }
+  // No account yet — create one.
+  await page.getByRole('button', { name: 'Create one' }).click();
+  await page.getByLabel('Name').fill(user.email.split('@')[0]);
+  await page.getByLabel('Email').fill(user.email);
+  await page.getByLabel('Password').fill(user.password);
+  await page.getByRole('button', { name: 'Create account' }).click();
 
-  // Anchored: the empty state also has an "Add your first contact" button.
-  await expect(
-    page.getByRole('button', { name: /^(Add contact|Add)$/ }),
-  ).toBeVisible();
+  await expect(signedIn).toBeVisible({ timeout: 20_000 });
 }
 
 export async function signOut(page: Page): Promise<void> {
